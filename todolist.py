@@ -4,20 +4,30 @@ import requests
 import os
 
 app = Flask(__name__)
-# TODO_API_URL = "http://"+os.environ['TODO_API_IP']+":5001"
-TODO_API_URL = "http://localhost:5001"
+TODO_API_URL = "http://"+os.environ['TODO_API_IP']+":5001"
+# TODO_API_URL = "http://localhost:5001"
 app.secret_key = b'\x9f\xff\xd4\xe7\xc9\x91\xe9o/L\x93\xdb\x16\xe9\xc2r\xdf\x99\x84\xae\xef?\xc7/'
 
 @app.route("/auth", methods=['GET', 'POST'])
 def auth():
+    error = None
+    success = None
     if request.method == 'POST':
         if request.form['action'] == 'register':
             username = request.form['username']
             password = request.form['password']
-            requests.post(TODO_API_URL + "/api/register", json={
+            response = requests.post(TODO_API_URL + "/api/register", json={
                 "username": username,
                 "password": password
             })
+            if response.status_code == 200:
+                result = response.json()
+                if result['result']:
+                    success = "Registration successful. Please login."
+                else:
+                    error = result.get('error', "An error occurred during registration.")
+            else:
+                error = "An error occurred during registration."
         elif request.form['action'] == 'login':
             username = request.form['username']
             password = request.form['password']
@@ -25,10 +35,18 @@ def auth():
                 "username": username,
                 "password": password
             })
-            if response.json()['result']:
-                session['username'] = username
-                return redirect(url_for('show_list'))
-    return render_template('auth.html')
+            if response.status_code == 200:
+                result = response.json()
+                if result['result']:
+                    session['username'] = username
+                    return redirect(url_for('show_list'))
+                else:
+                    error = "Invalid username or password."
+            else:
+                error = "An error occurred during login."
+    return render_template('auth.html', error=error, success=success, username=request.form.get('username', ''))
+
+
 
 @app.route("/logout")
 def logout():
@@ -81,4 +99,4 @@ def search_entries():
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", port=5002)
+    app.run("0.0.0.0")

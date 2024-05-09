@@ -23,10 +23,19 @@ def register():
     username = request.json['username']
     password = request.json['password']
     password_hash = hash_password(password)
-    cur.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
-    db.commit()
-    cur.close()
-    return jsonify({"result": True})
+    try:
+        cur.execute('INSERT INTO users (username, password_hash) VALUES (%s, %s)', (username, password_hash))
+        db.commit()
+        cur.close()
+        return jsonify({"result": True})
+    except mysql.connector.errors.IntegrityError as e:
+        db.rollback()
+        cur.close()
+        if e.errno == 1062:  # Duplicate entry error
+            return jsonify({"result": False, "error": "Username already exists. Please choose a different username."})
+        else:
+            return jsonify({"result": False, "error": "An error occurred during registration."})
+
 
 @app.route("/api/login", methods=['POST'])
 def login():
