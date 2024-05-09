@@ -18,61 +18,90 @@
 
 <body>
     <div class="container mt-4">
-              
-        <div class="container mt-4">
-            <div class="row">
-                <div class="col-md-12 text-center">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <a href="/" style="text-decoration: none; color: inherit;">
                     <i class="fas fa-tasks fa-4x"></i>
-                    <h1 class="mt-3">Todo List App</h1>
-                    <p class="lead">Efficiently manage your tasks and stay on top of your commitments.</p>
-                </div>
+                    <h1 class="mt-3" style="font-family: 'Arial', sans-serif; font-weight: bold; color: #333;">Todo List App</h1>
+                    <p class="lead" style="font-family: 'Arial', sans-serif; color: #666;">Efficiently manage your tasks and stay on top of your commitments.</p>
+                </a>
             </div>
         </div>
 
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>What to Do</th>
-                    <th>Due Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in todolist %}
-                <tr>
-                    <td {% if entry.status=='done' %} class='done' {% endif %}>{{ entry.what_to_do|safe }}</td>
-                    <td>{{ entry.due_date|safe }}</td>
-                    <td>
-                        <button class="btn btn-success btn-sm" onclick="location.href='/mark/{{entry.id}}'">Mark as Done</button>
-                        <button class="btn btn-danger btn-sm" onclick="location.href='/delete/{{entry.id}}'">Delete</button>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="3">
-                        <em>Unbelievable. Nothing to do for now.</em>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+        <div class="row mt-4">
+          <div class="col-md-6">
+              <button class="btn btn-primary" onclick="toggle_entry_form();" id='toggle_button'>Add a New Item</button>
+          </div>
+          <div class="col-md-6">
+              <div class="form-inline justify-content-end">
+                  <input type="text" class="form-control mr-2" id="search_query" name="query" placeholder="Search..." oninput="searchItems()">
+              </div>
+          </div>
+        </div>
+
+        <table class="table table-striped mt-4" id="todo-table">
+          <thead>
+              <tr>
+                  <th style="width: 50%;">What to Do</th>
+                  <th style="width: 30%;">Due Date</th>
+                  <th style="width: 20%;">Actions</th>
+              </tr>
+          </thead>
+          <tbody>
+              {% for entry in todolist %}
+              <tr>
+                  <td {% if entry.status=='done' %} class='done' {% endif %}>{{ entry.what_to_do|safe }}</td>
+                  <td>
+                      {% if entry.due_date %}
+                          {{ entry.due_date|safe }}
+                          {% if entry.recurring_interval and entry.recurring_interval != 'No' %}
+                              <br>
+                              <span style="font-size: 0.8em; color: #888;">recurring {{ entry.recurring_interval }}</span>
+                          {% endif %}
+                      {% endif %}
+                  </td>
+                  <td>
+                      <button class="btn btn-success btn-sm" onclick="location.href='/mark/{{entry.id}}'">Mark as Done</button>
+                      <button class="btn btn-danger btn-sm" onclick="location.href='/delete/{{entry.id}}'">Delete</button>
+                  </td>
+              </tr>
+              {% else %}
+              <tr>
+                  <td colspan="3">
+                      <em>Unbelievable. Nothing to do for now.</em>
+                  </td>
+              </tr>
+              {% endfor %}
+          </tbody>
         </table>
-        <button class="btn btn-primary" onclick="toggle_entry_form();" id='toggle_button'>Add a New Item</button>
-    </div>
+  
+      <div class="container mt-4">
+          <form action="/add" method="POST" id="add-form" style="display:none">
+              <div class="form-group">
+                  <label for="what_to_do">What to Do:</label>
+                  <input type="text" class="form-control" id="what_to_do" name="what_to_do" placeholder="more homework?" required>
+              </div>
+              <div class="form-row">
+                  <div class="form-group col-md-6">
+                      <label for="due_date">Due Date:</label>
+                      <input type="date" class="form-control" id="due_date" name="due_date" value="2024-05-09">
+                  </div>
+                  <div class="form-group col-md-6">
+                      <label for="recurring_interval">Recurring Interval:</label>
+                      <select class="form-control" id="recurring_interval" name="recurring_interval">
+                          <option value="">None</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="yearly">Yearly</option>
+                      </select>
+                  </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Save the New Item</button>
+          </form>
+      </div>
 
-    <div class="container mt-4">
-        <form action="/add" method="POST" id="add-form" style="display:none">
-            <div class="form-group">
-                <label for="what_to_do">What to Do:</label>
-                <input type="text" class="form-control" id="what_to_do" name="what_to_do" value="more homework?" required>
-            </div>
-            <div class="form-group">
-                <label for="due_date">Due Date:</label>
-                <input type="text" class="form-control" id="due_date" name="due_date"  placeholder="YYYY-MM-DD">
-            </div>
-            <button type="submit" class="btn btn-primary">Save the New Item</button>
-        </form>
-    </div>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         var show_entry_form = false;
 
@@ -86,6 +115,48 @@
             }
             show_entry_form = !show_entry_form;
         };
+
+        // Set default value of due date to today's date
+        document.getElementById('due_date').value = new Date().toISOString().slice(0, 10);
+
+        function searchItems() {
+            var query = $('#search_query').val();
+            $.ajax({
+                url: '/search',
+                data: { query: query },
+                success: function(data) {
+                    updateTodoList(data);
+                }
+            });
+        }
+
+        function updateTodoList(todolist) {
+            var tableBody = $('#todo-table tbody');
+            tableBody.empty();
+
+            if (todolist.length === 0) {
+                tableBody.append('<tr><td colspan="3"><em>Unbelievable. Nothing to do for now.</em></td></tr>');
+            } else {
+                todolist.forEach(function(entry) {
+                    var row = '<tr>';
+                    row += '<td' + (entry.status === 'done' ? ' class="done"' : '') + '>' + entry.what_to_do + '</td>';
+                    row += '<td>';
+                    if (entry.due_date) {
+                        row += entry.due_date;
+                        if (entry.recurring_interval && entry.recurring_interval !== 'No') {
+                            row += '<br><span style="font-size: 0.8em; color: #888;">recurring ' + entry.recurring_interval + '</span>';
+                        }
+                    }
+                    row += '</td>';
+                    row += '<td>';
+                    row += '<button class="btn btn-success btn-sm" onclick="location.href=\'/mark/' + entry.id + '\'">Mark as Done</button> ';
+                    row += '<button class="btn btn-danger btn-sm" onclick="location.href=\'/delete/' + entry.id + '\'">Delete</button>';
+                    row += '</td>';
+                    row += '</tr>';
+                    tableBody.append(row);
+                });
+            }
+        }
     </script>
 </body>
 
