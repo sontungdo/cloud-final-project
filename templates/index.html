@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Todo List Example</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        .done {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+              
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <i class="fas fa-tasks fa-4x"></i>
+                    <h1 class="mt-3">Todo List App</h1>
+                    <p class="lead">Efficiently manage your tasks and stay on top of your commitments.</p>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>What to Do</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in todolist %}
+                <tr>
+                    <td {% if entry.status=='done' %} class='done' {% endif %}>{{ entry.what_to_do|safe }}</td>
+                    <td>{{ entry.due_date|safe }}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="location.href='/mark/{{entry.id}}'">Mark as Done</button>
+                        <button class="btn btn-danger btn-sm" onclick="location.href='/delete/{{entry.id}}'">Delete</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">
+                        <em>Unbelievable. Nothing to do for now.</em>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button class="btn btn-primary" onclick="toggle_entry_form();" id='toggle_button'>Add a New Item</button>
+    </div>
+
+    <div class="container mt-4">
+        <form action="/add" method="POST" id="add-form" style="display:none">
+            <div class="form-group">
+                <label for="what_to_do">What to Do:</label>
+                <input type="text" class="form-control" id="what_to_do" name="what_to_do" value="more homework?" required>
+            </div>
+            <div class="form-group">
+                <label for="due_date">Due Date:</label>
+                <input type="text" class="form-control" id="due_date" name="due_date"  placeholder="YYYY-MM-DD">
+            </div>
+            <button type="submit" class="btn btn-primary">Save the New Item</button>
+        </form>
+    </div>
+
+    <script>
+        var show_entry_form = false;
+
+        function toggle_entry_form() {
+            if (show_entry_form) {
+                $('#add-form').hide();
+                $('#toggle_button').text("Add a New Item");
+            } else {
+                $('#add-form').show();
+                $('#toggle_button').text("Cancel the New Entry");
+            }
+            show_entry_form = !show_entry_form;
+        };
+    </script>
+</body>
+
+</html>
