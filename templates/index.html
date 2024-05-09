@@ -17,8 +17,8 @@
 </head>
 
 <body>
-    <div class="container mt-4">
-        <div class="row">
+      <div class="container mt-4">
+          <div class="row">
             <div class="col-md-12 text-center">
                 <a href="/" style="text-decoration: none; color: inherit;">
                     <i class="fas fa-tasks fa-4x"></i>
@@ -26,54 +26,64 @@
                     <p class="lead" style="font-family: 'Arial', sans-serif; color: #666;">Efficiently manage your tasks and stay on top of your commitments.</p>
                 </a>
             </div>
-        </div>
-
-        <div class="row mt-4">
-          <div class="col-md-6">
-              <button class="btn btn-primary" onclick="toggle_entry_form();" id='toggle_button'>Add a New Item</button>
           </div>
+
+          <div class="row mt-4">
+            <div class="col-md-6">
+                <button class="btn btn-primary" onclick="toggle_entry_form();" id='toggle_button'>Add a New Item</button>
+            </div>
+            <div class="col-md-6 text-right">
+                <span>Logged in as: <strong>{{ username }}</strong></span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary ml-2">Logout</a>
+            </div>
+          </div>
+
           <div class="col-md-6">
               <div class="form-inline justify-content-end">
                   <input type="text" class="form-control mr-2" id="search_query" name="query" placeholder="Search..." oninput="searchItems()">
               </div>
           </div>
-        </div>
+      </div>
 
-        <table class="table table-striped mt-4" id="todo-table">
-          <thead>
-              <tr>
-                  <th style="width: 50%;">What to Do</th>
-                  <th style="width: 30%;">Due Date</th>
-                  <th style="width: 20%;">Actions</th>
-              </tr>
-          </thead>
-          <tbody>
-              {% for entry in todolist %}
-              <tr>
-                  <td {% if entry.status=='done' %} class='done' {% endif %}>{{ entry.what_to_do|safe }}</td>
-                  <td>
-                      {% if entry.due_date %}
-                          {{ entry.due_date|safe }}
-                          {% if entry.recurring_interval and entry.recurring_interval != 'No' %}
-                              <br>
-                              <span style="font-size: 0.8em; color: #888;">recurring {{ entry.recurring_interval }}</span>
-                          {% endif %}
-                      {% endif %}
-                  </td>
-                  <td>
-                      <button class="btn btn-success btn-sm" onclick="location.href='/mark/{{entry.id}}'">Mark as Done</button>
-                      <button class="btn btn-danger btn-sm" onclick="location.href='/delete/{{entry.id}}'">Delete</button>
-                  </td>
-              </tr>
-              {% else %}
-              <tr>
-                  <td colspan="3">
-                      <em>Unbelievable. Nothing to do for now.</em>
-                  </td>
-              </tr>
-              {% endfor %}
-          </tbody>
-        </table>
+      <div class="container mt-4">
+        <div class="col-md-12">
+            <table class="table table-striped" id="todo-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">What to Do</th>
+                        <th style="width: 30%;">Due Date</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in todolist %}
+                    <tr>
+                        <td {% if entry.status=='done' %} class='done' {% endif %}>{{ entry.what_to_do|safe }}</td>
+                        <td>
+                            {% if entry.due_date %}
+                                {{ entry.due_date|safe }}
+                                {% if entry.recurring_interval and entry.recurring_interval != 'No' %}
+                                    <br>
+                                    <span style="font-size: 0.8em; color: #888;">recurring {{ entry.recurring_interval }}</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="location.href='/mark/{{entry.id}}'">Mark as Done</button>
+                            <button class="btn btn-danger btn-sm" onclick="location.href='/delete/{{entry.id}}'">Delete</button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3">
+                            <em>Unbelievable. Nothing to do for now.</em>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      </div>
   
       <div class="container mt-4">
           <form action="/add" method="POST" id="add-form" style="display:none">
